@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saathi</title>
+<style>
+  :root {
+    --bg: #faf7f2; --card: #ffffff; --ink: #1f2328; --muted: #6b7280; --line: #e7e1d8;
+    --accent: #d9622b; --accent-soft: #fbe9df; --good: #1f8a5b; --good-soft: #e3f4ec;
+    --warn: #b45309; --warn-soft: #fdf1dc; --me: #1f2328; --me-ink: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a; --card: #1f2125; --ink: #ecedee; --muted: #9aa0a6; --line: #2e3136;
+      --accent: #f08a4b; --accent-soft: #3a2a20; --good: #4cc38a; --good-soft: #1d3329;
+      --warn: #f0b45b; --warn-soft: #3a2f1c; --me: #ecedee; --me-ink: #16171a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line);
+           position: sticky; top: 0; background: var(--bg); z-index: 2; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
+  h1 span { color: var(--accent); }
+  .badge { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+  nav { margin-left: auto; display: flex; gap: 4px; }
+  nav button { background: none; border: 0; color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font: inherit; }
+  nav button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  main { max-width: 780px; margin: 0 auto; padding: 16px; }
+  section { display: none; } section.on { display: block; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select, input, textarea { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line);
+           border-radius: 10px; padding: 10px 12px; }
+  textarea { width: 100%; resize: none; }
+  button.primary { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 18px;
+           font: inherit; font-weight: 600; cursor: pointer; }
+  button.primary:disabled { opacity: .5; cursor: wait; }
+  button.ghost { background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 4px 10px;
+           cursor: pointer; font-size: 13px; }
+  #log { display: flex; flex-direction: column; gap: 12px; min-height: 45vh; padding: 12px 0 140px; }
+  .msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; }
+  .me { align-self: flex-end; background: var(--me); color: var(--me-ink); border-bottom-right-radius: 4px; }
+  .bot { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .native { color: var(--muted); font-size: 14px; margin-top: 6px; display: none; }
+  .bot.show-native .native { display: block; }
+  .tools { display: flex; gap: 6px; margin-top: 8px; }
+  .fb { align-self: flex-end; max-width: 85%; font-size: 14px; border-radius: 12px; padding: 10px 12px; }
+  .fb.good { background: var(--good-soft); color: var(--good); }
+  .fb.fix { background: var(--warn-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+  .fb b { color: var(--warn); }
+  .fb .corr { font-weight: 600; margin-bottom: 6px; }
+  .fb ul { margin: 4px 0 0; padding-left: 18px; }
+  .fb s { color: var(--muted); }
+  .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .composer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 16px; }
+  .composer .inner { max-width: 780px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  .hint { max-width: 780px; margin: 6px auto 0; font-size: 12px; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .grid input, .grid select { width: 100%; }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .typing { color: var(--muted); font-style: italic; }
+  .err { color: #c0392b; }
+  @media (max-width: 560px) { nav { margin-left: 0; width: 100%; } .msg, .fb { max-width: 95%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Saathi <span>·</span> साथी</h1>
+  <span class="badge" id="modelBadge">offline · loading…</span>
+  <nav>
+    <button data-tab="practice" class="on">Practice</button>
+    <button data-tab="review">Review</button>
+    <button data-tab="progress">Progress</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+</header>
+
+<main>
+  <section id="practice" class="on">
+    <div class="row">
+      <select id="scenario">
+        <option value="free">💬 Free chat</option>
+        <option value="smalltalk">☕ Office small talk</option>
+        <option value="interview">💼 Job interview</option>
+        <option value="cafe">🥐 Ordering at a café</option>
+        <option value="doctor">🩺 At the doctor</option>
+        <option value="phone">📞 Customer-support call</option>
+        <option value="travel">🏨 Hotel check-in</option>
+      </select>
+      <button class="ghost" id="newChat">New conversation</button>
+    </div>
+    <div id="log"></div>
+  </section>
+
+  <section id="review">
+    <div class="card" id="reviewCard"></div>
+  </section>
+
+  <section id="progress"><div id="progressBody"></div></section>
+
+  <section id="settings">
+    <div class="card">
+      <p style="margin-top:0">Tell Saathi who it is helping. Everything is stored in a file on this laptop only.</p>
+      <div class="grid">
+        <div><label>Friend's name</label><input id="p_name"></div>
+        <div><label>Native language (explanations)</label><input id="p_native_lang" placeholder="Hindi, Hinglish, Tamil…"></div>
+        <div><label>Language to practise</label><input id="p_target_lang"></div>
+        <div><label>Level</label>
+          <select id="p_level"><option>beginner</option><option>intermediate</option><option>advanced</option></select></div>
+        <div><label>Interests</label><input id="p_interests"></div>
+        <div><label>Goal</label><input id="p_goal"></div>
+        <div><label>Local model (Ollama)</label><select id="p_model"></select></div>
+      </div>
+      <p><button class="primary" id="saveProfile">Save</button> <span id="saved" class="tag"></span></p>
+    </div>
+  </section>
+</main>
+
+<div class="composer" id="composer">
+  <div class="inner">
+    <textarea id="input" rows="2" placeholder="Type in English… (Enter to send, Shift+Enter for new line)"></textarea>
+    <button class="primary" id="send">Send</button>
+  </div>
+  <div class="hint">🎙️ Want to speak instead? Press <b>fn</b> twice for macOS dictation. 🔒 Nothing leaves this laptop.</div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let profile = {}, history = [], busy = false;
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api = async (path, body) => {
+  const r = await fetch(path, body ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)} : {});
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+};
+
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US"; u.rate = profile.level === "beginner" ? 0.85 : 1;
+  speechSynthesis.speak(u);
+}
+
+// ---------- tabs ----------
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
+  $("#composer").style.display = b.dataset.tab === "practice" ? "" : "none";
+  if (b.dataset.tab === "review") loadReview();
+  if (b.dataset.tab === "progress") loadProgress();
+});
+
+// ---------- practice ----------
+function addMsg(cls, html) {
+  const d = document.createElement("div");
+  d.className = cls; d.innerHTML = html;
+  $("#log").appendChild(d);
+  d.scrollIntoView({behavior: "smooth", block: "end"});
+  return d;
+}
+
+function addBot(reply, native) {
+  const d = addMsg("msg bot", `${esc(reply)}<div class="native">${esc(native)}</div>
+    <div class="tools"><button class="ghost" data-a="speak">🔊 Listen</button>
+    <button class="ghost" data-a="native">🌐 ${esc(profile.native_lang || "Translate")}</button></div>`);
+  d.querySelector('[data-a=speak]').onclick = () => speak(reply);
+  d.querySelector('[data-a=native]').onclick = () => d.classList.toggle("show-native");
+}
+
+function greet() {
+  $("#log").innerHTML = "";
+  history = [];
+  const opener = {
+    free: `Hi ${profile.name}! I'm Saathi. Take your time — mistakes are welcome here. How was your day?`,
+    smalltalk: "Oh hi! You're new on the team, right? I'm Sam. How's your first week going?",
+    interview: `Hello ${profile.name}, thanks for coming in today. Can you tell me a little about yourself?`,
+    cafe: "Hi there! Welcome in. What can I get for you today?",
+    doctor: `Good morning, ${profile.name}. Please have a seat. What brings you in today?`,
+    phone: "Thank you for calling customer support, this is Alex. How can I help you today?",
+    travel: "Good evening and welcome! Do you have a reservation with us?",
+  }[$("#scenario").value];
+  addBot(opener, "");
+  history.push({role: "assistant", content: opener});
+}
+
+async function send() {
+  const text = $("#input").value.trim();
+  if (!text || busy) return;
+  busy = true; $("#send").disabled = true; $("#input").value = "";
+  addMsg("msg me", esc(text));
+  const typing = addMsg("msg bot typing", "Saathi is thinking…");
+  try {
+    const r = await api("/api/chat", {message: text, history, scenario: $("#scenario").value});
+    typing.remove();
+    const fb = r.feedback || {};
+    if (fb.is_correct) {
+      const norm = s => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}\s']/gu, "").trim();
+      addMsg("fb good", norm(fb.corrected) && norm(fb.corrected) !== norm(text)
+        ? `✓ Good! A native speaker might say: <b style="color:inherit">${esc(fb.corrected)}</b>`
+        : "✓ Perfect sentence!");
+    } else {
+      addMsg("fb fix", `<div class="tag">Better way to say it</div><div class="corr">${esc(fb.corrected)}</div><ul>${
+        fb.tips.map(t => `<li><s>${esc(t.mistake)}</s> → <b>${esc(t.fix)}</b><br><span>${esc(t.why)}</span></li>`).join("")
+      }</ul>`);
+    }
+    addBot(r.reply, r.reply_native);
+    history.push({role: "user", content: text}, {role: "assistant", content: r.reply});
+  } catch (e) {
+    typing.className = "msg bot err"; typing.textContent = "⚠️ " + e.message;
+  } finally {
+    busy = false; $("#send").disabled = false; $("#input").focus();
+  }
+}
+
+$("#send").onclick = send;
+$("#input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+$("#scenario").onchange = greet;
+$("#newChat").onclick = greet;
+
+// ---------- review ----------
+async function loadReview() {
+  const box = $("#reviewCard");
+  box.innerHTML = "Loading…";
+  const {card} = await api("/api/review");
+  if (!card) { box.innerHTML = "<p>No mistakes to review yet 🎉 Go practise and Saathi will collect them here.</p>"; return; }
+  box.innerHTML = `<div class="tag">${esc(card.category)} · fix the highlighted part</div>
+    <p style="font-size:18px">“${esc(card.original)}”</p>
+    <p>Problem: <b style="color:var(--warn)">${esc(card.mistake)}</b></p>
+    <textarea id="rAns" rows="2" placeholder="Write the whole sentence correctly"></textarea>
+    <p class="row"><button class="primary" id="rCheck">Check</button><button class="ghost" id="rSkip">Skip</button></p>
+    <div id="rOut"></div>`;
+  $("#rSkip").onclick = loadReview;
+  $("#rCheck").onclick = async () => {
+    $("#rCheck").disabled = true;
+    try {
+      const r = await api("/api/review", {id: card.id, answer: $("#rAns").value});
+      $("#rOut").innerHTML = `<div class="fb ${r.correct ? "good" : "fix"}" style="max-width:100%">
+        ${r.correct ? "✓ Mastered!" : "Not quite."} ${esc(r.feedback)}<br><span class="tag">Expected:</span> ${esc(r.expected)}</div>
+        <p><button class="ghost" id="rNext">Next card →</button></p>`;
+      $("#rNext").onclick = loadReview;
+    } catch (e) { $("#rOut").innerHTML = `<p class="err">${esc(e.message)}</p>`; $("#rCheck").disabled = false; }
+  };
+}
+
+// ---------- progress ----------
+async function loadProgress() {
+  const p = await api("/api/progress");
+  const total = p.days.reduce((a, d) => a + d.messages, 0), good = p.days.reduce((a, d) => a + d.correct, 0);
+  const max = Math.max(1, ...p.categories.map(c => c.n));
+  $("#progressBody").innerHTML = `
+    <div class="card"><div class="tag">Last 14 days</div>
+      <p style="font-size:22px;margin:4px 0"><b>${total}</b> messages · <b>${total ? Math.round(100 * good / total) : 0}%</b> perfect</p></div>
+    <div class="card"><div class="tag">What to focus on</div>${
+      p.categories.length ? p.categories.map(c => `<p style="margin:10px 0 4px">${esc(c.category)} — ${c.n} mistakes, ${c.done || 0} mastered</p>
+        <div class="bar"><i style="width:${100 * c.n / max}%"></i></div>`).join("") : "<p>Nothing yet.</p>"}</div>
+    <div class="card"><div class="tag">Recent corrections</div><ul>${
+      p.recent.map(r => `<li><s>${esc(r.mistake)}</s> → <b>${esc(r.fix)}</b> <span class="tag">${esc(r.category)}</span></li>`).join("")}</ul></div>`;
+}
+
+// ---------- settings ----------
+const FIELDS = ["name", "native_lang", "target_lang", "level", "interests", "goal", "model"];
+async function loadProfile() {
+  const {profile: p, models} = await api("/api/profile");
+  profile = p;
+  const sel = $("#p_model");
+  sel.innerHTML = (models || [p.model]).map(m => `<option>${esc(m)}</option>`).join("");
+  FIELDS.forEach(f => $("#p_" + f).value = p[f]);
+  $("#modelBadge").textContent = models ? `🔒 offline · ${p.model}` : "⚠️ Ollama not running";
+  $("#input").placeholder = `Type in ${p.target_lang}… (Enter to send)`;
+}
+$("#saveProfile").onclick = async () => {
+  const data = Object.fromEntries(FIELDS.map(f => [f, $("#p_" + f).value]));
+  await api("/api/profile", data);
+  await loadProfile();
+  $("#saved").textContent = "Saved ✓";
+  setTimeout(() => $("#saved").textContent = "", 2000);
+  greet();
+};
+
+loadProfile().then(greet).catch(e => addMsg("msg bot err", "⚠️ " + esc(e.message)));
+</script>
+</body>
+</html>
