@@ -1,3 +1,15 @@
+---
+title: Saathi
+emoji: 🪔
+colorFrom: yellow
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Patient, private English practice partner on Gemma 3 4B
+---
+
 # Saathi · साथी
 
 **A patient, private English practice partner that runs entirely on a laptop.**
@@ -76,7 +88,7 @@ MIT
 
 Saathi is meant to run on the learner's own laptop. A hosted copy is only for people who want to try it without installing anything.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kanhaiyak23/saathi)
+**Live demo on Hugging Face Spaces (free CPU, so replies take 30-90 s):** https://huggingface.co/spaces/[HF_USERNAME]/saathi
 
-The `Dockerfile` bundles Ollama and the model weights into one CPU container, and `render.yaml` is the blueprint.
+The `Dockerfile` bundles Ollama and Gemma 3 4B into one CPU container. The same image also deploys to Render via `render.yaml`.
 Note: a hosted copy sends sentences to that server and shares one mistake notebook between all visitors.
