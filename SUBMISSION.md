@@ -32,7 +32,7 @@ Every mistake goes into a local notebook. The **Review** tab turns them into fla
 
 ## Demo
 
-<!-- Record a 60–90s screen video (Cmd+Shift+5 on Mac): pick "Job interview", type a sentence with mistakes, show the Hindi tips, press 🔊 Listen, then show Review and Progress. Upload to YouTube/Loom and paste the link below. -->
+<!-- No hosted demo on purpose: Saathi runs on the learner's laptop. Record a 60–90s screen video (Cmd+Shift+5 on Mac): pick "Job interview", type a sentence with mistakes, show the Hindi tips, press 🔊 Listen, then show Review and Progress. Upload to YouTube/Loom and paste the link below. -->
 
 [VIDEO LINK]
 
@@ -40,7 +40,7 @@ Every mistake goes into a local notebook. The **Review** tab turns them into fla
 
 ## Code
 
-{% embed [GITHUB REPO URL] %}
+{% embed https://github.com/kanhaiyak23/saathi %}
 
 Zero dependencies beyond the Python standard library plus Ollama. `./start.sh` and you're running.
 

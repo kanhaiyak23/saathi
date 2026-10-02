@@ -1,15 +1,3 @@
----
-title: Saathi
-emoji: 🪔
-colorFrom: yellow
-colorTo: red
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
-short_description: Patient, private English practice partner on Gemma 3 4B
----
-
 # Saathi · साथी
 
 **A patient, private English practice partner that runs entirely on a laptop.**
@@ -80,15 +68,12 @@ All prompts live in [`prompts.py`](prompts.py). Making a 4B model reliable took 
 - Conversations are never written to disk. Only corrected mistakes and daily counts are stored, in `data/saathi.db`.
 - Delete `data/` to wipe everything.
 
+
+## Self-hosting (optional)
+
+Saathi is meant to run on the learner's own laptop. If you want a shared copy anyway, the `Dockerfile` bundles Ollama and Gemma 3 4B into one CPU container (needs about 5 GB RAM), and `render.yaml` is a Render blueprint.
+A hosted copy sends sentences to that server and shares one mistake notebook between all visitors.
+
 ## License
 
 MIT
-
-## Hosted demo (optional)
-
-Saathi is meant to run on the learner's own laptop. A hosted copy is only for people who want to try it without installing anything.
-
-**Live demo on Hugging Face Spaces (free CPU, so replies take 30-90 s):** https://huggingface.co/spaces/[HF_USERNAME]/saathi
-
-The `Dockerfile` bundles Ollama and Gemma 3 4B into one CPU container. The same image also deploys to Render via `render.yaml`.
-Note: a hosted copy sends sentences to that server and shares one mistake notebook between all visitors.
