@@ -71,3 +71,12 @@ All prompts live in [`prompts.py`](prompts.py). Making a 4B model reliable took 
 ## License
 
 MIT
+
+## Hosted demo (optional)
+
+Saathi is meant to run on the learner's own laptop. A hosted copy is only for people who want to try it without installing anything.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kanhaiyak23/saathi)
+
+The `Dockerfile` bundles Ollama and the model weights into one CPU container, and `render.yaml` is the blueprint.
+Note: a hosted copy sends sentences to that server and shares one mistake notebook between all visitors.

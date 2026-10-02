@@ -1,0 +1,12 @@
+# Render Blueprint. Render has no GPUs, so the model runs on CPU (expect ~20-60s per reply).
+# gemma3:4b needs ~4-5 GB RAM. Smaller models (gemma3:1b, qwen2.5:1.5b) fit 2 GB but were too
+# inaccurate as a tutor in testing, so they are not recommended.
+services:
+  - type: web
+    name: saathi
+    runtime: docker
+    plan: pro
+    healthCheckPath: /api/profile
+    envVars:
+      - key: SAATHI_MODEL
+        value: gemma3:4b

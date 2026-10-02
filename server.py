@@ -4,6 +4,7 @@ Zero dependencies beyond the Python standard library. The model runs locally in 
 Run:  python3 server.py   then open http://localhost:8765
 """
 
+import difflib
 import json
 import os
 import random
@@ -21,6 +22,7 @@ DB_PATH = DATA_DIR / "saathi.db"
 OLLAMA = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 DEFAULT_MODEL = os.environ.get("SAATHI_MODEL", "gemma3:4b")
 PORT = int(os.environ.get("PORT", "8765"))
+HOST = os.environ.get("HOST", "127.0.0.1")  # set HOST=0.0.0.0 only when deploying to a server
 HISTORY_TURNS = 10  # keep context small so a 4B model stays fast on 8 GB RAM
 
 DEFAULT_PROFILE = {
@@ -106,6 +108,29 @@ def normalize_tip(t, profile):
             "why": t.get(native_key(profile), ""), "category": t.get("category", "grammar")}
 
 
+def diff_tips(original, corrected):
+    """Fallback when the model rewrites a sentence but forgets to list tips: diff the words ourselves."""
+    a, b = original.split(), corrected.split()
+    norm = lambda ws: sorted(w.lower().strip(".,!?;:") for w in ws)
+    if norm(a) == norm(b):  # same words, different order: a style preference, not a mistake
+        return []
+    clean = lambda ws: " ".join(w.strip(".,!?;:") for w in ws)
+    ops = [op for op in difflib.SequenceMatcher(a=[w.lower().strip(".,!?;:") for w in a],
+                                                b=[w.lower().strip(".,!?;:") for w in b]).get_opcodes() if op[0] != "equal"]
+    if not ops or len(ops) > 3:  # a full rewrite isn't a list of small fixes; just show the corrected sentence
+        return []
+    tips = []
+    for tag, i1, i2, j1, j2 in ops:
+        if tag == "delete":  # models often drop words for style; that isn't the learner's mistake
+            continue
+        if tag == "insert" and i1 > 0:  # show the missing word with its neighbour so it's readable
+            i1, j1 = i1 - 1, j1 - 1
+        mistake, fix = clean(a[i1:i2]), clean(b[j1:j2])
+        if mistake and fix and mistake.lower() != fix.lower():
+            tips.append({"mistake": mistake, "fix": fix, "why": "", "category": "grammar"})
+    return tips
+
+
 def chat(payload):
     profile = get_profile()
     scenario = payload.get("scenario", "free")
@@ -123,8 +148,11 @@ def chat(payload):
     # Guardrail for small models: keep a tip only if the "wrong" words really appear in what they typed.
     tips = [t for t in tips if t["mistake"] and t["fix"] and t["mistake"].lower() != t["fix"].lower()
             and squash(t["mistake"]) in squash(text)]
+    corrected = raw.get("corrected_full_message", text)
+    if not tips and squash(corrected) != squash(text):
+        tips = diff_tips(text, corrected)
     result = {
-        "feedback": {"is_correct": not tips, "corrected": raw.get("corrected_full_message", text), "tips": tips},
+        "feedback": {"is_correct": not tips, "corrected": corrected, "tips": tips},
         "reply": raw.get("reply", ""),
         "reply_native": raw.get("reply_translated", ""),
     }
@@ -251,5 +279,5 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     db().close()
-    print(f"Saathi is running at http://localhost:{PORT}  (model: {get_profile()['model']}, Ollama: {OLLAMA})")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    print(f"Saathi is running at http://{HOST}:{PORT}  (model: {get_profile()['model']}, Ollama: {OLLAMA})")
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
